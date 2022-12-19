@@ -1,0 +1,447 @@
+openapi: 3.0.0
+info:
+  # Your application title.
+  title: Belfius Banking API
+  # API version. You can use semantic versioning like 1.0.0.
+  version: 1.0.0
+  # The api type as defined by integration architecture
+  # possible values are: [enterprise, experience, inner]
+  x-api-type: enterprise
+  # Unique identifier of the API in the urn format
+  # The uuid must be generate by a random generator. https://www.uuidtools.com/v4
+  # This uuid is only generated once and the x-api-id stays unique trough the entire api lifecycle
+  x-api-id: c0184f38-b98d-11e7-9c56-68f728c1ba70
+  # The DEFL code of your application.
+  x-application-code: defl
+  description: |-
+    <Add summary below>
+    The 'Simple Banking API' provides consumers a simple way to retrieve bank
+    accounts info, account balances and account transactions history.
+
+    ### Version history
+    #### Draft Versions (0.x.x)
+    * v0.0.1: My first draft of the API Specifications.
+    * v0.0.2: My second draft.
+    * v0.1.0: My first version to share with stakeholders.
+    * v0.1.1: My version after collecting feedback from business stakeholders.
+    * v0.1.2: My version after collecting feedback from developers.
+    #### Release Versions (1.x.x)
+    * v1.0.0: My first version ready for development.
+    * v1.1.0: Added GET /accounts/{id}/transactions operation to support the retrieval of transaction history for an individual account.
+
+    ### Use Cases
+    * As a user I want to retrieve my accounts.
+    * As a user I want to open a new account.
+    * As a user I want to update one of my existing accounts.
+    * As a user I want to retrieve the balance of one of my individual accounts.
+    * As a user I want to retrieve the transaction history of an invidual account.
+
+    ### Additional documentation
+    - [Insert links to (internal) documentation](https://example.belfius.be/documentation)
+
+  # Contact information: Name of your team, email.
+  contact:
+    name: API Competence Center Team
+    email: api-competence-center@belfius.be
+
+  # Contact information: Name of your team, email.
+  # Check the API Design Guidelines for the right naming conventions.
+  # https://confluence.belwired.net:8443/display/00013816E/API+design+guidelines
+servers:
+  - url: "https://defl-tst.belwired.net/core-banking/payments"
+  - url: "https://defl-gtu.belwired.net/core-banking/payments"
+  - url: "https://defl.belwired.net/core-banking/payments"
+
+tags:
+  - name: Accounts
+    description: "All operations related to accounts and balances."
+  - name: Transactions
+    description: "All operations related to account transactions."
+
+paths:
+  /accounts:
+    get:
+      tags:
+        - Accounts
+      summary: Retrieve your accounts.
+      description: "Use this operation to retrieve overview of your bank accounts."
+      operationId: getAccounts
+      # The B-function configured for this operation. Default value when unknown: 'B00000'
+      x-bfunction: B00000
+      security:
+        - basicAuth: [ ]
+      parameters:
+        - name: accountTypeCodeId
+          in: query
+          description: |
+            The Account Type differentiator (CodeId) . When not given, all account types are returned."
+            Values are listed in TCOD PA65.
+            Possible values are:
+            - 1 = Savings
+            - 2 = Payment          
+          required: false
+          schema:
+            type: string
+            example: "1"
+      responses:
+        200:
+          description: "An array of accounts."
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/account'
+    post:
+      tags:
+        - Accounts
+      summary: Create an account.
+      description: "Create an account for an actor"
+      operationId: createAccount
+      x-bfunction: B00001
+      security:
+        - basicAuth: [ ]
+      requestBody:
+        description: "The properties to request the creation of a bank account."
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/accountRequest"
+      responses:
+        201:
+          description: "Account created succesfully."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/account"
+
+
+  /accounts/{id}:
+    put:
+      tags:
+        - Accounts
+      summary: Update the properties of an account.
+      description: "Use this operation to update properties of an account."
+      operationId: updateAccount
+      x-bfunction: B00001
+      security:
+        - basicAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          description: "Id of the account"
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: "The properties to request the creation of a bank account."
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/accountRequest'
+      responses:
+        200:
+          description: "Account updated succesfully."
+
+    get:
+      tags:
+        - Accounts
+      summary: Get the properties of an account.
+      description: "Use this operation to update properties of an account."
+      operationId: getAccount
+      x-bfunction: B00001
+      security:
+        - basicAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          description: "Id of the account"
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: "Account retrieved successfully."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/account"
+
+
+
+  /accounts/{id}/balances:
+    get:
+      tags:
+        - Accounts
+      summary: Retrieve the current balance of an account.
+      description: "Use this operation to retrieve the account balances."
+      operationId: getAccountBalances
+      x-bfunction: B00003
+      security:
+        - basicAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          description: "Id of the account"
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: "An array of account balances."
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/balance'
+
+  /saving-accounts/{id}:
+    get:
+      tags:
+        - Accounts
+      summary: Retrieve the current balance of an account.
+      description: "Use this operation to retrieve the account balances."
+      operationId: getAccountBalances
+      x-bfunction: B00003
+      security:
+        - basicAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          description: "Id of the account"
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: "An array of account balances."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/savingAccount'
+
+  /accounts/{id}/transactions:
+    get:
+      tags:
+        - Transactions
+      summary: Get the accounts transactions.
+      description: "Get the transactions of an account."
+      operationId: getAccountTransactions
+      x-bfunction: B00004
+      security:
+        - basicAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          description: "ID of the item to fetch"
+          required: true
+          schema:
+            type: string
+        - name: from
+          in: query
+          description: "The start date of the transactions, maximum query interval = 7 days, if not provided date of today is returned by default."
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          description: "The end date of the transactions"
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: pageable
+          in: query
+          description: Page and page size requested
+          required: false
+          schema:
+            type: object
+            description: minimal Pageable query parameters following SpringBoot Standards.
+            properties:
+              page:
+                description: A page (or offset), the start position of the concerned list of data.
+                type: integer
+                minimum: 1
+              size:
+                description: The number of items to be retrieved. Note that a default pageSize MUST be set.
+                type: integer
+                minimum: 1
+                maximum: 2000
+                default: 20
+      responses:
+        200:
+          description: "An array of account transactions."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  page:
+                    description: The index of the current page of items.
+                    type: integer
+                    example: 1
+                  size:
+                    description: The number of items to be retrieved
+                    type: integer
+                    example: 20
+                  items:
+                    description: Array of resource items.
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/transaction'
+
+components:
+  schemas:
+    codeValue:
+      type: object
+      description: code and value object
+      properties:
+        codeListId:
+          type: string
+          description: the code list identifier
+        codeId:
+          type: string
+          description: the code identifer of the codeValue
+
+    iban:
+      type: string
+
+    currency:
+      type: string
+
+    max18DecimalNumber:
+      type: number
+
+    date:
+      type: string
+
+    account:
+      type: object
+      description: "An account in the context of a bank, created by the deposit of money or its equivalent and subject to withdrawel of money"
+      properties:
+        id:
+          type: string
+          description: "The unique identifier."
+          example: "123456789012"
+        type:
+          description: |
+            The type differentiator as a Code Value.
+            Values are listed in TCOD PA65.
+            Possible CodeId Values are:
+            - 1 = Savings
+            - 2 = Payment
+          allOf:
+            - $ref: '#/components/schemas/codeValue'
+          example:
+            codeListId: "PA65"
+            codeId: "2"
+        alias:
+          type: string
+          description: "A descriptive description of my account"
+          example: "Savings for my son"
+        iban:
+          $ref: '#/components/schemas/iban'
+        currency:
+          $ref: '#/components/schemas/currency'
+        holderName:
+          type: string
+          description: "The full name of the account holder"
+          example: "Robert Schuman"
+        balances:
+          type: array
+          description: "A list of balances."
+          items:
+            $ref: '#/components/schemas/balance'
+      required:
+        - id
+        - iban
+        - currency
+        - balance
+
+    savingAccount:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/account'
+      properties:
+        interestRate:
+          type: number
+          description: interest rate
+
+    balance:
+      type: object
+      description: "The amount of money present on a bank account"
+      properties:
+        amount:
+          type: number
+      required:
+        - amount
+
+    transaction:
+      type: object
+      description: "A transaction and the resulting balance."
+      properties:
+        id:
+          type: string
+          description: "The unique identifier."
+          format: uuid
+          example: "d290f1ee-6c54-4b01-90e6-d701748f0851"
+        transactionDate:
+          type: string
+          format: date
+          description: "The transaction date"
+          example: "2022-09-01"
+        date:
+          $ref: '#/components/schemas/date'
+        details:
+          type: string
+          description: "The details of the transaction"
+          example: "Location: The Bakery Brussels, payment with Fitbit Pay."
+        amount:
+          $ref: '#/components/schemas/max18DecimalNumber'
+        type:
+          type: string
+          description: "The type of the transaction."
+          enum:
+            - debit
+            - credit
+          example: "debit"
+      required:
+        - id
+        - transactionDate
+        - amount
+        - type
+
+    accountRequest:
+      type: object
+      description: "All the needed parameters to create a new account"
+      properties:
+        type:
+          type: string
+          description: "The type of the account."
+          enum:
+            - payment
+            - savings
+          example: "savings"
+        alias:
+          type: string
+          description: "The account alias."
+          example: "Savings for my son."
+        currency:
+          $ref: '#/components/schemas/currency'
+      required:
+        - type
+        - currency
+
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+
+security:
+  - basicAuth: [ ]
+
+externalDocs:
+  description: "Link to (internal) API Documentation"
+  url: "https://confluence.belwired.net:8443/"
